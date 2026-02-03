@@ -33,6 +33,5 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// Index pour améliorer les performances de recherche
 UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
