@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Base de données MongoDB
+  mongodb:
+    image: mongo:7-jammy
+    container_name: booknest-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin123}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-booknest}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - booknest-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend NestJS
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: booknest-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/${MONGO_DATABASE:-booknest}?authSource=admin
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-change-in-production}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-24h}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src
+      - ./test:/app/test
+      - /app/node_modules
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - booknest-network
+    command: npm run start:dev
+
+networks:
+  booknest-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
