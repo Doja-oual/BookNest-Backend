@@ -1,7 +1,21 @@
-import { Controller, Post, Body, Get, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Patch,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto';
+import { RegisterUserDto, LoginUserDto, UpdateUserDto } from './dto';
 import { JwtAuthGuard } from './guards';
 import { CurrentUser } from '../common/decorators';
 
@@ -14,8 +28,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Créer un nouveau compte' })
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès' })
   @ApiResponse({ status: 409, description: 'Email déjà utilisé' })
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  @ApiResponse({ status: 400, description: 'Données invalides' })
+  async register(@Body() registerUserDto: RegisterUserDto) {
+    return this.authService.registerUser(registerUserDto);
   }
 
   @Post('login')
@@ -23,8 +38,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Se connecter' })
   @ApiResponse({ status: 200, description: 'Connexion réussie' })
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  @ApiResponse({ status: 400, description: 'Données invalides' })
+  async login(@Body() loginUserDto: LoginUserDto) {
+    return this.authService.loginUser(loginUserDto);
   }
 
   @Get('profile')
@@ -35,5 +51,20 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Non autorisé' })
   async getProfile(@CurrentUser() user: any) {
     return this.authService.getProfile(user.userId);
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mettre à jour le profil utilisateur' })
+  @ApiResponse({ status: 200, description: 'Profil mis à jour avec succès' })
+  @ApiResponse({ status: 401, description: 'Non autorisé' })
+  @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
+  async updateProfile(
+    @CurrentUser() user: any,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.authService.updateProfile(user.userId, updateUserDto);
   }
 }

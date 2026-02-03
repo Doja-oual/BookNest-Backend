@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import { RegisterDto, LoginDto } from './dto';
+import { RegisterUserDto, LoginUserDto, UpdateUserDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -10,16 +10,29 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async getProfile(userId: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur non trouvé');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user.toJSON();
+    return userWithoutPassword;
+  }
+
+  async registerUser(registerUserDto: RegisterUserDto) {
     const user = await this.usersService.create(
-      registerDto.email,
-      registerDto.password,
-      registerDto.firstName,
-      registerDto.lastName,
-      registerDto.role,
+      registerUserDto.email,
+      registerUserDto.password,
+      registerUserDto.firstName,
+      registerUserDto.lastName,
+      registerUserDto.role,
     );
 
-    const { password, ...userWithoutPassword } = user.toObject();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user.toJSON();
 
     return {
       message: 'Utilisateur créé avec succès',
@@ -27,15 +40,15 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
-    const user = await this.usersService.findByEmail(loginDto.email);
+  async loginUser(loginUserDto: LoginUserDto) {
+    const user = await this.usersService.findByEmail(loginUserDto.email);
 
     if (!user) {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
 
     const isPasswordValid = await this.usersService.validatePassword(
-      loginDto.password,
+      loginUserDto.password,
       user.password,
     );
 
@@ -67,14 +80,14 @@ export class AuthService {
     };
   }
 
-  async getProfile(userId: string) {
-    const user = await this.usersService.findById(userId);
-    
-    if (!user) {
-      throw new UnauthorizedException('Utilisateur non trouvé');
-    }
+  async updateProfile(userId: string, updateUserDto: UpdateUserDto) {
+    const user = await this.usersService.updateProfile(userId, updateUserDto);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user.toJSON();
 
-    const { password, ...userWithoutPassword } = user.toObject();
-    return userWithoutPassword;
+    return {
+      message: 'Profil mis à jour avec succès',
+      user: userWithoutPassword,
+    };
   }
 }
