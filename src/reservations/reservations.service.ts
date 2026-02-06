@@ -183,4 +183,86 @@ export class ReservationsService {
 
     return stats[0] || { totalReservations: 0, totalSeatsReserved: 0 };
   }
+
+  // Méthodes Admin
+  async confirmReservation(id: string): Promise<ReservationDocument> {
+    const reservation = await this.findOne(id);
+
+    if (reservation.status === ReservationStatus.CONFIRMED) {
+      throw new BadRequestException('Cette réservation est déjà confirmée');
+    }
+
+    if (reservation.status === ReservationStatus.CANCELLED) {
+      throw new BadRequestException(
+        'Impossible de confirmer une réservation annulée',
+      );
+    }
+
+    if (reservation.status === ReservationStatus.REFUSED) {
+      throw new BadRequestException(
+        'Impossible de confirmer une réservation refusée',
+      );
+    }
+
+    reservation.status = ReservationStatus.CONFIRMED;
+    return reservation.save();
+  }
+
+  async refuseReservation(id: string): Promise<ReservationDocument> {
+    const reservation = await this.findOne(id);
+
+    if (reservation.status === ReservationStatus.REFUSED) {
+      throw new BadRequestException('Cette réservation est déjà refusée');
+    }
+
+    if (reservation.status === ReservationStatus.CANCELLED) {
+      throw new BadRequestException(
+        'Impossible de refuser une réservation annulée',
+      );
+    }
+
+    const previousStatus = reservation.status;
+    reservation.status = ReservationStatus.REFUSED;
+    await reservation.save();
+
+    // Si la réservation était confirmée, remettre les places disponibles
+    if (previousStatus === ReservationStatus.CONFIRMED) {
+      await this.eventsService['eventModel']
+        .findByIdAndUpdate((reservation.event as any)._id, {
+          $inc: { availableSeats: reservation.numberOfSeats },
+        })
+        .exec();
+    }
+
+    return reservation;
+  }
+
+  async adminCancelReservation(id: string): Promise<ReservationDocument> {
+    const reservation = await this.findOne(id);
+
+    if (reservation.status === ReservationStatus.CANCELLED) {
+      throw new BadRequestException('Cette réservation est déjà annulée');
+    }
+
+    if (reservation.status === ReservationStatus.REFUSED) {
+      throw new BadRequestException(
+        'Impossible d\'annuler une réservation refusée',
+      );
+    }
+
+    const wasConfirmed = reservation.status === ReservationStatus.CONFIRMED;
+    reservation.status = ReservationStatus.CANCELLED;
+    await reservation.save();
+
+    // Si la réservation était confirmée, remettre les places disponibles
+    if (wasConfirmed) {
+      await this.eventsService['eventModel']
+        .findByIdAndUpdate((reservation.event as any)._id, {
+          $inc: { availableSeats: reservation.numberOfSeats },
+        })
+        .exec();
+    }
+
+    return reservation;
+  }
 }
