@@ -17,8 +17,9 @@ import {
 } from '@nestjs/swagger';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto';
-import { JwtAuthGuard } from '../auth/guards';
-import { CurrentUser } from '../common/decorators';
+import { JwtAuthGuard, RolesGuard } from '../auth/guards';
+import { CurrentUser, Roles } from '../common/decorators';
+import { UserRole } from '../common/enums';
 
 @ApiTags('Reservations')
 @Controller('reservations')
@@ -113,5 +114,71 @@ export class ReservationsController {
   })
   getStats(@Param('eventId') eventId: string) {
     return this.reservationsService.getReservationStats(eventId);
+  }
+
+  // Endpoints Admin
+  @Patch(':id/confirm')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Confirmer une réservation (Admin uniquement)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Réservation confirmée avec succès',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Réservation déjà confirmée ou dans un état invalide',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Admin requis',
+  })
+  confirmReservation(@Param('id') id: string) {
+    return this.reservationsService.confirmReservation(id);
+  }
+
+  @Patch(':id/refuse')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refuser une réservation (Admin uniquement)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Réservation refusée avec succès',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Réservation déjà refusée ou dans un état invalide',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Admin requis',
+  })
+  refuseReservation(@Param('id') id: string) {
+    return this.reservationsService.refuseReservation(id);
+  }
+
+  @Patch(':id/admin-cancel')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Annuler une réservation en tant qu\'Admin',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Réservation annulée avec succès',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Réservation déjà annulée ou refusée',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Admin requis',
+  })
+  adminCancelReservation(@Param('id') id: string) {
+    return this.reservationsService.adminCancelReservation(id);
   }
 }
