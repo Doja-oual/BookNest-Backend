@@ -52,7 +52,18 @@ Le pipeline CD gère les déploiements :
 Pour que les pipelines fonctionnent correctement, configurez ces secrets dans GitHub :
 
 - `CODECOV_TOKEN` : Token pour upload des rapports de couverture (optionnel)
+- `DOCKER_USERNAME` : Votre nom d'utilisateur Docker Hub (requis pour publication)
+- `DOCKER_PASSWORD` : Votre token/mot de passe Docker Hub (requis pour publication)
 - `GITHUB_TOKEN` : Fourni automatiquement par GitHub Actions
+
+#### Configuration des secrets Docker Hub
+
+1. Créez un compte sur [Docker Hub](https://hub.docker.com)
+2. Générez un Access Token dans Docker Hub (Settings → Security → New Access Token)
+3. Dans GitHub, allez à Settings → Secrets and variables → Actions
+4. Ajoutez deux secrets :
+   - `DOCKER_USERNAME` : votre nom d'utilisateur Docker Hub
+   - `DOCKER_PASSWORD` : votre Access Token Docker Hub
 
 ### Environnements GitHub
 
