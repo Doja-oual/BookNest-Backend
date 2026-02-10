@@ -127,6 +127,6 @@ export class EventsController {
     @Body('status') status: EventStatus,
     @CurrentUser() user: any,
   ) {
-    return this.eventsService.updateStatus(id, status, user.userId);
+    return this.eventsService.updateStatus(id, status, user.userId, user.role);
   }
 }

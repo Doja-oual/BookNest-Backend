@@ -49,6 +49,22 @@ export class ReservationsController {
     return this.reservationsService.create(createReservationDto, userId);
   }
 
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Récupérer toutes les réservations (Admin uniquement)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste de toutes les réservations',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Admin requis',
+  })
+  findAll() {
+    return this.reservationsService.findAll();
+  }
+
   @Get('me')
   @ApiOperation({ summary: 'Récupérer mes réservations' })
   @ApiResponse({

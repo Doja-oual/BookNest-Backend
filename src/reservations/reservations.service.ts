@@ -89,6 +89,15 @@ export class ReservationsService {
     ]);
   }
 
+  async findAll(): Promise<ReservationDocument[]> {
+    return this.reservationModel
+      .find()
+      .populate('event', 'title date location status maxParticipants availableSeats')
+      .populate('user', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
   async findMyReservations(userId: string): Promise<ReservationDocument[]> {
     return this.reservationModel
       .find({ user: userId as any })

@@ -142,10 +142,15 @@ export class EventsService {
     id: string,
     status: EventStatus,
     userId: string,
+    userRole?: string,
   ): Promise<EventDocument> {
     const event = await this.findOne(id);
 
-    if (event.createdBy._id.toString() !== userId) {
+    // Allow if user is ADMIN or if user is the creator
+    const isCreator = event.createdBy._id.toString() === userId;
+    const isAdmin = userRole === 'ADMIN';
+    
+    if (!isCreator && !isAdmin) {
       throw new ForbiddenException(
         'Vous n\'êtes pas autorisé à modifier cet événement',
       );
