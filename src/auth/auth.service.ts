@@ -34,8 +34,17 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user.toJSON();
 
+    // Générer le token JWT pour l'utilisateur nouvellement créé
+    const payload = {
+      sub: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    };
+
+    const access_token = this.jwtService.sign(payload);
+
     return {
-      message: 'Utilisateur créé avec succès',
+      access_token,
       user: userWithoutPassword,
     };
   }
@@ -66,10 +75,10 @@ export class AuthService {
       role: user.role,
     };
 
-    const accessToken = this.jwtService.sign(payload);
+    const access_token = this.jwtService.sign(payload);
 
     return {
-      accessToken,
+      access_token,
       user: {
         id: user._id,
         email: user.email,

@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # MongoDB pour tests E2E - Sans authentication
+  mongodb-test:
+    image: mongo:7-jammy
+    container_name: booknest-mongodb-test
+    restart: unless-stopped
+    ports:
+      - "27018:27017"  # Port différent pour éviter conflit
+    volumes:
+      - mongodb_test_data:/data/db
+    networks:
+      - booknest-test-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  booknest-test-network:
+    driver: bridge
+
+volumes:
+  mongodb_test_data:
+    driver: local

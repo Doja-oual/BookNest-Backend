@@ -184,7 +184,7 @@ describe('Events & Reservations E2E Tests', () => {
 
     it('Admin devrait annuler la réservation', async () => {
       const response = await request(app.getHttpServer())
-        .delete(`/reservations/${reservationId}/admin-cancel`)
+        .patch(`/reservations/${reservationId}/admin-cancel`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
